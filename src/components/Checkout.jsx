@@ -65,13 +65,16 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white text-slate-700 w-full max-w-md rounded-lg shadow-xl border border-slate-200">
-        <div className="p-4 border-b border-slate-200">
+      <div className="w-full max-w-md rounded-lg shadow-xl" style={{ backgroundColor: '#ede0d4', border: '1px solid #b08968' }}>
+        <div className="p-4" style={{ borderBottom: '1px solid #b08968' }}>
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-slate-800">Finalizar Pedido</h2>
+            <h2 className="text-xl font-bold" style={{ color: '#7f5539' }}>Finalizar Pedido</h2>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 transition-colors"
+              className="transition-colors"
+              style={{ color: '#b08968' }}
+              onMouseEnter={(e) => e.target.style.color = '#7f5539'}
+              onMouseLeave={(e) => e.target.style.color = '#b08968'}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -83,7 +86,7 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
         <form onSubmit={handleSubmit} className="p-4">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: '#7f5539' }}>
                 Nombre *
               </label>
               <input
@@ -91,9 +94,12 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 ${
-                  errors.firstName ? 'border-red-400' : 'border-slate-300'
-                }`}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
+                style={{ 
+                  backgroundColor: '#e6ccb2',
+                  borderColor: errors.firstName ? '#dc2626' : '#b08968',
+                  color: '#7f5539'
+                }}
                 placeholder="Tu nombre"
               />
               {errors.firstName && (
@@ -102,7 +108,7 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: '#7f5539' }}>
                 Apellido *
               </label>
               <input
@@ -110,9 +116,12 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 ${
-                  errors.lastName ? 'border-red-400' : 'border-slate-300'
-                }`}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
+                style={{ 
+                  backgroundColor: '#e6ccb2',
+                  borderColor: errors.lastName ? '#dc2626' : '#b08968',
+                  color: '#7f5539'
+                }}
                 placeholder="Tu apellido"
               />
               {errors.lastName && (
@@ -121,7 +130,7 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: '#7f5539' }}>
                 Teléfono *
               </label>
               <input
@@ -129,9 +138,12 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 ${
-                  errors.phone ? 'border-red-400' : 'border-slate-300'
-                }`}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
+                style={{ 
+                  backgroundColor: '#e6ccb2',
+                  borderColor: errors.phone ? '#dc2626' : '#b08968',
+                  color: '#7f5539'
+                }}
                 placeholder="Tu número de teléfono"
               />
               {errors.phone && (
@@ -140,7 +152,7 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: '#7f5539' }}>
                 Método de Pago
               </label>
               <div className="space-y-2">
@@ -151,9 +163,9 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
                     value="cash"
                     checked={formData.paymentMethod === 'cash'}
                     onChange={handleInputChange}
-                    className="text-slate-500 focus:ring-slate-500"
+                    style={{ accentColor: '#b08968' }}
                   />
-                  <span className="ml-2 text-slate-700">Efectivo</span>
+                  <span className="ml-2" style={{ color: '#7f5539' }}>Efectivo</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -162,23 +174,23 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
                     value="transfer"
                     checked={formData.paymentMethod === 'transfer'}
                     onChange={handleInputChange}
-                    className="text-slate-500 focus:ring-slate-500"
+                    style={{ accentColor: '#b08968' }}
                   />
-                  <span className="ml-2 text-slate-700">Transferencia</span>
+                  <span className="ml-2" style={{ color: '#7f5539' }}>Transferencia</span>
                 </label>
               </div>
             </div>
 
-            <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-              <p className="text-sm text-slate-600">
+            <div className="rounded-lg p-3 border" style={{ backgroundColor: '#e6ccb2', borderColor: '#b08968' }}>
+              <p className="text-sm" style={{ color: '#7f5539' }}>
                 <strong>Importante:</strong> Todos los pedidos deben ser abonados en el local antes de retirar, 
                 o al momento de recibir el delivery.
               </p>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t border-slate-200">
-              <span className="text-lg font-semibold text-slate-700">Total:</span>
-              <span className="text-2xl font-bold text-slate-800">${total}</span>
+            <div className="flex justify-between items-center pt-4" style={{ borderTop: '1px solid #b08968' }}>
+              <span className="text-lg font-semibold" style={{ color: '#7f5539' }}>Total:</span>
+              <span className="text-2xl font-bold" style={{ color: '#7f5539' }}>${total}</span>
             </div>
           </div>
 
@@ -186,13 +198,39 @@ const Checkout = ({ isOpen, onClose, cartItems, onConfirmOrder }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3 rounded-lg font-semibold transition-colors duration-200"
+              className="flex-1 py-3 rounded-lg font-semibold transition-colors duration-200 border"
+              style={{ 
+                backgroundColor: '#e6ccb2', 
+                color: '#7f5539',
+                borderColor: '#b08968'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#b08968';
+                e.target.style.color = '#ede0d4';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#e6ccb2';
+                e.target.style.color = '#7f5539';
+              }}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 bg-slate-600 hover:bg-slate-700 text-white py-3 rounded-lg font-semibold transition-colors duration-200"
+              className="flex-1 py-3 rounded-lg font-semibold transition-colors duration-200 border"
+              style={{ 
+                backgroundColor: '#ddb892', 
+                color: '#7f5539',
+                borderColor: '#b08968'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#b08968';
+                e.target.style.color = '#ede0d4';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#ddb892';
+                e.target.style.color = '#7f5539';
+              }}
             >
               Confirmar Pedido
             </button>

@@ -12,8 +12,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc; /* slate-50 */
-  color: #334155; /* slate-700 */
+  background-color: #ede0d4; /* Color más claro de la paleta */
+  color: #7f5539; /* Color más oscuro para texto */
 }
 
 /* Utilidades para truncar texto */
@@ -29,22 +29,82 @@ body {
   transition: all 0.2s ease-in-out;
 }
 
-/* Estilos para scrollbar en modo claro */
+/* Estilos para scrollbar con nueva paleta */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #e2e8f0; /* slate-200 */
+  background: #e6ccb2; /* Color claro de la paleta */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* slate-300 */
+  background: #b08968; /* Color medio de la paleta */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* slate-400 */
+  background: #7f5539; /* Color más oscuro de la paleta */
+}
+
+/* Animaciones personalizadas para la pantalla de carga */
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Clases de animación personalizadas */
+.animate-float {
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s ease-out;
 }
 
 /* Mejoras para mobile */
