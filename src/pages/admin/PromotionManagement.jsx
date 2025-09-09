@@ -1,23 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPromotionFlyer, updatePromotionFlyer } from '../../data/promotions';
+import { useApp } from '../../context/AppContext';
 
 const PromotionManagement = () => {
   const navigate = useNavigate();
-  const [flyerData, setFlyerData] = useState(getPromotionFlyer());
+  const { promotions, actions } = useApp();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    title: flyerData.title,
-    subtitle: flyerData.subtitle,
-    description: flyerData.description,
-    image: flyerData.image,
-    isActive: flyerData.isActive,
-    validUntil: flyerData.validUntil,
-    buttonText: flyerData.buttonText,
-    buttonLink: flyerData.buttonLink
+    title: '',
+    description: '',
+    image: null,
+    isActive: true,
+    validUntil: '',
+    startDate: ''
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+
+  // Cargar promociones al montar el componente
+  useEffect(() => {
+    const loadPromotions = async () => {
+      try {
+        setLoading(true);
+        await actions.loadPromotions();
+      } catch (error) {
+        console.error('Error cargando promociones:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPromotions();
+  }, []); // Removemos actions de las dependencias para evitar el bucle
+
+  // Obtener la promoción actual
+  const currentPromotion = promotions.length > 0 ? promotions[0] : null;
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -36,10 +54,10 @@ const PromotionManagement = () => {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       
-      // Actualizar el formData con la nueva imagen
+      // Actualizar el formData con el archivo
       setFormData(prev => ({
         ...prev,
-        image: url
+        image: file
       }));
     }
   };
@@ -52,15 +70,38 @@ const PromotionManagement = () => {
     setPreviewUrl(null);
     setFormData(prev => ({
       ...prev,
-      image: flyerData.image // Volver a la imagen original
+      image: null
     }));
   };
 
-  const handleSave = () => {
-    const updatedFlyer = updatePromotionFlyer(formData);
-    setFlyerData(updatedFlyer);
-    setIsEditing(false);
-    alert('Flyer promocional actualizado correctamente');
+  const handleSave = async () => {
+    try {
+      if (currentPromotion) {
+        // Actualizar promoción existente
+        await actions.updatePromotion(currentPromotion._id, formData);
+      } else {
+        // Crear nueva promoción
+        await actions.createPromotion(formData);
+      }
+      
+      setIsEditing(false);
+      // Limpiar archivos seleccionados
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setFormData({
+        title: '',
+        description: '',
+        image: null,
+        isActive: true,
+        validUntil: '',
+        startDate: ''
+      });
+    } catch (error) {
+      console.error('Error guardando promoción:', error);
+    }
   };
 
   const handleCancel = () => {
@@ -72,14 +113,12 @@ const PromotionManagement = () => {
     setPreviewUrl(null);
     
     setFormData({
-      title: flyerData.title,
-      subtitle: flyerData.subtitle,
-      description: flyerData.description,
-      image: flyerData.image,
-      isActive: flyerData.isActive,
-      validUntil: flyerData.validUntil,
-      buttonText: flyerData.buttonText,
-      buttonLink: flyerData.buttonLink
+      title: '',
+      description: '',
+      image: null,
+      isActive: true,
+      validUntil: '',
+      startDate: ''
     });
     setIsEditing(false);
   };
@@ -114,7 +153,7 @@ const PromotionManagement = () => {
             borderColor: '#b08968'
           }}
         >
-          {isEditing ? 'Cancelar' : 'Editar Flyer'}
+          {isEditing ? 'Cancelar' : (currentPromotion ? 'Editar Promoción' : 'Crear Promoción')}
         </button>
       </div>
 
@@ -123,23 +162,82 @@ const PromotionManagement = () => {
         <div className="bg-white rounded-lg p-6 shadow-sm border mb-6" style={{ borderColor: '#b08968' }}>
           <h2 className="text-xl font-bold mb-4" style={{ color: '#7f5539' }}>Vista Previa del Flyer</h2>
           
-          <div className="relative rounded-lg overflow-hidden shadow-lg border" style={{ borderColor: '#b08968' }}>
-            <div className="relative w-full max-w-sm mx-auto h-96 md:h-[500px] lg:h-[600px]">
-              <img
-                src={flyerData.image}
-                alt={flyerData.title}
-                className="w-full h-full object-cover"
-              />
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderColor: '#7f5539' }}></div>
+              <p style={{ color: '#b08968' }}>Cargando promociones...</p>
             </div>
-          </div>
+          ) : currentPromotion ? (
+            <div className="relative rounded-lg overflow-hidden shadow-lg border" style={{ borderColor: '#b08968' }}>
+              <div className="relative w-full max-w-sm mx-auto h-96 md:h-[500px] lg:h-[600px]">
+                {currentPromotion.image ? (
+                  <img
+                    src={currentPromotion.image}
+                    alt={currentPromotion.title || 'Promoción'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: '#e6ccb2' }}>
+                    <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#b08968' }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p style={{ color: '#b08968' }}>No hay promociones activas. Crea una nueva promoción.</p>
+            </div>
+          )}
         </div>
 
         {/* Formulario de Edición */}
         {isEditing && (
           <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#b08968' }}>
-            <h2 className="text-xl font-bold mb-4" style={{ color: '#7f5539' }}>Editar Flyer Promocional</h2>
+            <h2 className="text-xl font-bold mb-4" style={{ color: '#7f5539' }}>
+              {currentPromotion ? 'Editar Promoción' : 'Crear Nueva Promoción'}
+            </h2>
             
             <form className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#7f5539' }}>
+                  Título de la Promoción
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
+                  style={{ 
+                    backgroundColor: '#e6ccb2',
+                    borderColor: '#b08968',
+                    color: '#7f5539'
+                  }}
+                  placeholder="Ej: ¡Oferta Especial!"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#7f5539' }}>
+                  Descripción
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
+                  style={{ 
+                    backgroundColor: '#e6ccb2',
+                    borderColor: '#b08968',
+                    color: '#7f5539'
+                  }}
+                  placeholder="Descripción de la promoción..."
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: '#7f5539' }}>
                   Imagen del Flyer *
@@ -151,6 +249,7 @@ const PromotionManagement = () => {
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
+                    required={!currentPromotion}
                     className="hidden"
                     id="file-upload"
                   />
@@ -202,22 +301,42 @@ const PromotionManagement = () => {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#7f5539' }}>
-                  Válido Hasta
-                </label>
-                <input
-                  type="date"
-                  name="validUntil"
-                  value={formData.validUntil}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
-                  style={{ 
-                    backgroundColor: '#e6ccb2',
-                    borderColor: '#b08968',
-                    color: '#7f5539'
-                  }}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#7f5539' }}>
+                    Fecha de Inicio
+                  </label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
+                    style={{ 
+                      backgroundColor: '#e6ccb2',
+                      borderColor: '#b08968',
+                      color: '#7f5539'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#7f5539' }}>
+                    Válido Hasta
+                  </label>
+                  <input
+                    type="date"
+                    name="validUntil"
+                    value={formData.validUntil}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
+                    style={{ 
+                      backgroundColor: '#e6ccb2',
+                      borderColor: '#b08968',
+                      color: '#7f5539'
+                    }}
+                  />
+                </div>
               </div>
 
               <div className="flex items-center space-x-3">
@@ -245,7 +364,7 @@ const PromotionManagement = () => {
                     border: '2px solid #b08968'
                   }}
                 >
-                  Guardar Cambios
+                  {currentPromotion ? 'Actualizar Promoción' : 'Crear Promoción'}
                 </button>
                 <button
                   type="button"

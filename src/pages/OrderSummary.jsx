@@ -1,16 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const OrderSummary = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [orderData, setOrderData] = useState(location.state || null);
-
-  const generateOrderNumber = () => {
-    return Math.random().toString(36).substr(2, 9).toUpperCase();
-  };
-
-  const orderNumber = generateOrderNumber();
+  const orderData = location.state || null;
 
   const handleNewOrder = () => {
     navigate('/');
@@ -59,7 +53,7 @@ const OrderSummary = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span style={{ color: '#b08968' }}>Número de Pedido:</span>
-                <span className="font-semibold" style={{ color: '#7f5539' }}>#{orderNumber}</span>
+                <span className="font-semibold" style={{ color: '#7f5539' }}>#{orderData.order?.orderNumber || 'N/A'}</span>
               </div>
               
               <div className="flex justify-between">
@@ -91,8 +85,8 @@ const OrderSummary = () => {
             <h2 className="text-xl font-bold mb-4" style={{ color: '#7f5539' }}>Productos</h2>
             
             <div className="space-y-3">
-              {orderData.cartItems.map((item) => (
-                <div key={item.id} className="flex justify-between items-center">
+              {orderData.order?.items?.map((item, index) => (
+                <div key={index} className="flex justify-between items-center">
                   <div className="flex items-center space-x-3">
                     <span className="font-medium" style={{ color: '#7f5539' }}>{item.quantity}x</span>
                     <span style={{ color: '#b08968' }}>{item.name}</span>
@@ -104,7 +98,7 @@ const OrderSummary = () => {
               <div className="border-t pt-3 mt-3" style={{ borderColor: '#b08968' }}>
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-lg" style={{ color: '#7f5539' }}>Total</span>
-                  <span className="font-bold text-lg" style={{ color: '#7f5539' }}>${orderData.total}</span>
+                  <span className="font-bold text-lg" style={{ color: '#7f5539' }}>${orderData.order?.total || 0}</span>
                 </div>
               </div>
             </div>

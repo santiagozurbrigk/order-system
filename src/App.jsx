@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AppProvider } from './context/AppContext';
 import LoadingAnimation from './components/LoadingAnimation';
+import Alert from './components/Alert';
 
 // Client Pages
 import Home from './pages/Home';
@@ -14,6 +16,10 @@ import AdminDashboard from './pages/admin/Dashboard';
 import MenuManagement from './pages/admin/MenuManagement';
 import PromotionManagement from './pages/admin/PromotionManagement';
 import CategoryManagement from './pages/admin/CategoryManagement';
+
+// Components
+import FloatingCartButton from './components/FloatingCartButton';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -38,22 +44,48 @@ function App() {
   }
 
   return (
-    <Router>
-      <Routes>
-        {/* Client Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order-summary" element={<OrderSummary />} />
-        
-        {/* Admin Routes */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/menu" element={<MenuManagement />} />
-        <Route path="/admin/promotions" element={<PromotionManagement />} />
-        <Route path="/admin/categories" element={<CategoryManagement />} />
-      </Routes>
-    </Router>
+    <AppProvider>
+      <Router>
+        <div className="min-h-screen" style={{ backgroundColor: '#ede0d4' }}>
+          {/* Componente de alertas */}
+          <Alert />
+          
+          {/* Botón flotante del carrito */}
+          <FloatingCartButton />
+          
+          <Routes>
+            {/* Client Routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-summary" element={<OrderSummary />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/menu" element={
+              <ProtectedRoute>
+                <MenuManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/promotions" element={
+              <ProtectedRoute>
+                <PromotionManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/categories" element={
+              <ProtectedRoute>
+                <CategoryManagement />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </div>
+      </Router>
+    </AppProvider>
   );
 }
 

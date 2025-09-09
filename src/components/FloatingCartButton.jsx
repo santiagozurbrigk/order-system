@@ -1,12 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
 
-const FloatingCartButton = ({ cartItems, onCartClick }) => {
-  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+const FloatingCartButton = () => {
+  const navigate = useNavigate();
+  const { cart, actions } = useApp();
+  const [isAnimating, setIsAnimating] = useState(false);
+  const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+
+  const handleClick = () => {
+    setIsAnimating(true);
+    // Navegar a la página del carrito
+    navigate('/cart');
+    setTimeout(() => setIsAnimating(false), 300);
+  };
 
   return (
     <button
-      onClick={onCartClick}
-      className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center"
+      onClick={handleClick}
+      className={`fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center ${isAnimating ? 'animate-bounce' : ''}`}
       style={{ 
         backgroundColor: '#ddb892',
         border: '2px solid #b08968'
@@ -23,10 +35,10 @@ const FloatingCartButton = ({ cartItems, onCartClick }) => {
       </svg>
       {totalItems > 0 && (
         <span 
-          className="absolute -top-2 -right-2 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold"
+          className={`absolute -top-2 -right-2 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold transition-all duration-300 ${totalItems > 9 ? 'animate-pulse' : ''}`}
           style={{ backgroundColor: '#7f5539' }}
         >
-          {totalItems}
+          {totalItems > 99 ? '99+' : totalItems}
         </span>
       )}
     </button>

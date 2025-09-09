@@ -1,54 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { orders, actions, admin } = useApp();
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [loading, setLoading] = useState(true);
   
-  // Datos de ejemplo para los pedidos
-  const [orders, setOrders] = useState([
-    {
-      id: 1,
-      orderNumber: 'AB001',
-      customer: 'Juan Pérez',
-      phone: '1234567890',
-      items: [
-        { name: 'Clásica Ala-Burguer', quantity: 2, price: 1200 },
-        { name: 'Papas Fritas', quantity: 1, price: 500 }
-      ],
-      total: 2900,
-      status: 'pending',
-      createdAt: '2024-01-15 14:30',
-      address: 'Av. Principal 123, Centro'
-    },
-    {
-      id: 2,
-      orderNumber: 'AB002',
-      customer: 'María García',
-      phone: '0987654321',
-      items: [
-        { name: 'Doble Carne', quantity: 1, price: 1800 },
-        { name: 'Combo Clásico', quantity: 1, price: 1800 }
-      ],
-      total: 3600,
-      status: 'preparing',
-      createdAt: '2024-01-15 14:15',
-      address: 'Calle Secundaria 456, Norte'
-    },
-    {
-      id: 3,
-      orderNumber: 'AB003',
-      customer: 'Carlos López',
-      phone: '1122334455',
-      items: [
-        { name: 'Pollo Crispy', quantity: 1, price: 1400 }
-      ],
-      total: 1400,
-      status: 'ready',
-      createdAt: '2024-01-15 13:45',
-      address: 'Plaza Central 789, Sur'
-    }
-  ]);
+  // Cargar pedidos al montar el componente
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        setLoading(true);
+        await actions.loadOrders();
+      } catch (error) {
+        console.error('Error cargando pedidos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, []); // Removemos actions de las dependencias para evitar el bucle
 
   const statusOptions = [
     { value: 'all', label: 'Todos', color: '#b08968' },
@@ -62,12 +36,12 @@ const Dashboard = () => {
     ? orders 
     : orders.filter(order => order.status === selectedStatus);
 
-  const updateOrderStatus = (orderId, newStatus) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
+  const updateOrderStatus = async (orderId, newStatus) => {
+    try {
+      await actions.updateOrderStatus(orderId, newStatus);
+    } catch (error) {
+      console.error('Error actualizando estado del pedido:', error);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -81,6 +55,7 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
+    actions.logout();
     navigate('/admin/login');
   };
 
@@ -88,7 +63,12 @@ const Dashboard = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#ede0d4' }}>
       {/* Header */}
       <div className="sticky top-0 z-40 py-4 px-4 flex items-center justify-between" style={{ backgroundColor: '#ede0d4' }}>
-        <h1 className="text-2xl font-bold" style={{ color: '#7f5539' }}>Panel de Administración</h1>
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: '#7f5539' }}>Panel de Administración</h1>
+          {admin && (
+            <p className="text-sm" style={{ color: '#b08968' }}>Bienvenido, {admin.name}</p>
+          )}
+        </div>
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate('/admin/categories')}
@@ -183,17 +163,24 @@ const Dashboard = () => {
 
         {/* Orders List */}
         <div className="space-y-4">
-          {filteredOrders.length === 0 ? (
+          {loading ? (
+            <div className="bg-white rounded-lg p-8 text-center shadow-sm border" style={{ borderColor: '#b08968' }}>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderColor: '#7f5539' }}></div>
+              <p className="text-lg" style={{ color: '#b08968' }}>Cargando pedidos...</p>
+            </div>
+          ) : filteredOrders.length === 0 ? (
             <div className="bg-white rounded-lg p-8 text-center shadow-sm border" style={{ borderColor: '#b08968' }}>
               <p className="text-lg" style={{ color: '#b08968' }}>No hay pedidos con el filtro seleccionado</p>
             </div>
           ) : (
             filteredOrders.map((order) => (
-              <div key={order.id} className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#b08968' }}>
+              <div key={order._id} className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#b08968' }}>
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-xl font-bold" style={{ color: '#7f5539' }}>Pedido #{order.orderNumber}</h3>
-                    <p className="text-sm" style={{ color: '#b08968' }}>{order.createdAt}</p>
+                    <p className="text-sm" style={{ color: '#b08968' }}>
+                      {new Date(order.createdAt).toLocaleString()}
+                    </p>
                   </div>
                   <span 
                     className="px-3 py-1 rounded-full text-sm font-medium"
@@ -209,9 +196,11 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <h4 className="font-semibold mb-2" style={{ color: '#7f5539' }}>Cliente</h4>
-                    <p style={{ color: '#b08968' }}>{order.customer}</p>
-                    <p style={{ color: '#b08968' }}>{order.phone}</p>
-                    <p style={{ color: '#b08968' }}>{order.address}</p>
+                    <p style={{ color: '#b08968' }}>{order.customer.name} {order.customer.lastName}</p>
+                    <p style={{ color: '#b08968' }}>{order.customer.phone}</p>
+                    <p className="text-sm mt-2" style={{ color: '#b08968' }}>
+                      Pago: {order.paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia'}
+                    </p>
                   </div>
                   <div>
                     <h4 className="font-semibold mb-2" style={{ color: '#7f5539' }}>Productos</h4>
@@ -228,11 +217,19 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+                {order.notes && (
+                  <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: '#e6ccb2' }}>
+                    <p className="text-sm" style={{ color: '#7f5539' }}>
+                      <strong>Notas:</strong> {order.notes}
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex flex-wrap gap-2">
                   {statusOptions.slice(1).map((status) => (
                     <button
                       key={status.value}
-                      onClick={() => updateOrderStatus(order.id, status.value)}
+                      onClick={() => updateOrderStatus(order._id, status.value)}
                       className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
                         order.status === status.value ? 'ring-2' : ''
                       }`}

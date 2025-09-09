@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllCategories, addCategory, updateCategory, deleteCategory, reorderCategories } from '../../data/categories';
+import { useApp } from '../../context/AppContext';
 
 const CategoryManagement = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState(getAllCategories());
+  const { categories, actions } = useApp();
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     isActive: true
   });
+
+  // Cargar categorías al montar el componente
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoading(true);
+        await actions.loadCategories();
+      } catch (error) {
+        console.error('Error cargando categorías:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []); // Removemos actions de las dependencias para evitar el bucle
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -41,32 +58,38 @@ const CategoryManagement = () => {
     });
   };
 
-  const handleDeleteCategory = (categoryId) => {
+  const handleDeleteCategory = async (categoryId) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
-      deleteCategory(categoryId);
-      setCategories(getAllCategories());
+      try {
+        await actions.deleteCategory(categoryId);
+      } catch (error) {
+        console.error('Error eliminando categoría:', error);
+      }
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (editingCategory) {
-      // Editar categoría existente
-      updateCategory(editingCategory.id, formData);
-    } else {
-      // Agregar nueva categoría
-      addCategory(formData);
+    try {
+      if (editingCategory) {
+        // Editar categoría existente
+        await actions.updateCategory(editingCategory._id, formData);
+      } else {
+        // Agregar nueva categoría
+        await actions.createCategory(formData);
+      }
+      
+      setIsAddingCategory(false);
+      setEditingCategory(null);
+      setFormData({
+        name: '',
+        description: '',
+        isActive: true
+      });
+    } catch (error) {
+      console.error('Error guardando categoría:', error);
     }
-    
-    setCategories(getAllCategories());
-    setIsAddingCategory(false);
-    setEditingCategory(null);
-    setFormData({
-      name: '',
-      description: '',
-      isActive: true
-    });
   };
 
   const handleCancel = () => {
@@ -83,11 +106,14 @@ const CategoryManagement = () => {
     navigate('/admin/dashboard');
   };
 
-  const toggleCategoryStatus = (categoryId) => {
-    const category = categories.find(cat => cat.id === categoryId);
+  const toggleCategoryStatus = async (categoryId) => {
+    const category = categories.find(cat => cat._id === categoryId);
     if (category) {
-      updateCategory(categoryId, { isActive: !category.isActive });
-      setCategories(getAllCategories());
+      try {
+        await actions.updateCategory(categoryId, { isActive: !category.isActive });
+      } catch (error) {
+        console.error('Error actualizando estado de categoría:', error);
+      }
     }
   };
 
@@ -214,13 +240,18 @@ const CategoryManagement = () => {
 
         {/* Categories List */}
         <div className="space-y-4">
-          {categories.length === 0 ? (
+          {loading ? (
+            <div className="bg-white rounded-lg p-8 text-center shadow-sm border" style={{ borderColor: '#b08968' }}>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderColor: '#7f5539' }}></div>
+              <p className="text-lg" style={{ color: '#b08968' }}>Cargando categorías...</p>
+            </div>
+          ) : categories.length === 0 ? (
             <div className="bg-white rounded-lg p-8 text-center shadow-sm border" style={{ borderColor: '#b08968' }}>
               <p className="text-lg" style={{ color: '#b08968' }}>No hay categorías creadas</p>
             </div>
           ) : (
             categories.map((category) => (
-              <div key={category.id} className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#b08968' }}>
+              <div key={category._id} className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#b08968' }}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
@@ -234,12 +265,12 @@ const CategoryManagement = () => {
                       </span>
                     </div>
                     <p className="text-sm mb-3" style={{ color: '#b08968' }}>{category.description}</p>
-                    <p className="text-xs" style={{ color: '#b08968' }}>Orden: {category.order}</p>
+                    <p className="text-xs" style={{ color: '#b08968' }}>Orden: {category.order || 0}</p>
                   </div>
                   
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => toggleCategoryStatus(category.id)}
+                      onClick={() => toggleCategoryStatus(category._id)}
                       className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
                         category.isActive 
                           ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
@@ -259,7 +290,7 @@ const CategoryManagement = () => {
                       Editar
                     </button>
                     <button
-                      onClick={() => handleDeleteCategory(category.id)}
+                      onClick={() => handleDeleteCategory(category._id)}
                       className="px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200"
                       style={{ 
                         backgroundColor: '#fef2f2', 

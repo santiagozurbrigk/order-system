@@ -1,38 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
 
 const Cart = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [cartItems, setCartItems] = useState(location.state?.cartItems || []);
-
-  const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const { cart, actions, cartTotal } = useApp();
 
   const updateQuantity = (productId, newQuantity) => {
     if (newQuantity <= 0) {
-      removeFromCart(productId);
+      actions.removeFromCart(productId);
       return;
     }
     
-    setCartItems(prevItems =>
-      prevItems.map(item =>
-        item.id === productId
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    );
+    actions.updateCartItem(productId, newQuantity);
   };
 
   const removeFromCart = (productId) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+    actions.removeFromCart(productId);
   };
 
   const handleContinue = () => {
-    navigate('/checkout', { state: { cartItems } });
+    navigate('/checkout');
   };
 
   const handleBack = () => {
-    navigate('/', { state: { cartItems } });
+    navigate('/');
   };
 
   return (
@@ -54,7 +46,7 @@ const Cart = () => {
       </div>
 
       <div className="px-4 pb-20">
-        {cartItems.length === 0 ? (
+        {cart.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#e6ccb2' }}>
               <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#b08968' }}>
@@ -100,7 +92,7 @@ const Cart = () => {
 
             {/* Cart Items */}
             <div className="space-y-4 mb-6">
-              {cartItems.map((item) => (
+              {cart.map((item) => (
                 <div key={item.id} className="bg-white rounded-lg p-4 shadow-sm border" style={{ borderColor: '#b08968' }}>
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
@@ -173,7 +165,7 @@ const Cart = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span style={{ color: '#b08968' }}>Subtotal</span>
-                  <span style={{ color: '#7f5539' }}>${total}</span>
+                  <span style={{ color: '#7f5539' }}>${cartTotal}</span>
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: '#b08968' }}>Impuestos y tarifas</span>
@@ -186,7 +178,7 @@ const Cart = () => {
                 <div className="border-t pt-2 mt-2" style={{ borderColor: '#b08968' }}>
                   <div className="flex justify-between">
                     <span className="font-bold text-lg" style={{ color: '#7f5539' }}>Total</span>
-                    <span className="font-bold text-lg" style={{ color: '#7f5539' }}>${total + 2}</span>
+                    <span className="font-bold text-lg" style={{ color: '#7f5539' }}>${cartTotal + 2}</span>
                   </div>
                 </div>
               </div>
@@ -211,7 +203,7 @@ const Cart = () => {
               }}
             >
               <span>Continuar</span>
-              <span>${total + 2}</span>
+              <span>${cartTotal + 2}</span>
             </button>
           </>
         )}

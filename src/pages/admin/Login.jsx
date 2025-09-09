@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, actions } = useApp();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/admin/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -49,12 +58,14 @@ const Login = () => {
     
     setIsLoading(true);
     
-    // Simular login (aquí iría la lógica real de autenticación)
-    setTimeout(() => {
+    try {
+      await actions.login(formData.email, formData.password);
+      // La navegación se maneja automáticamente en el useEffect
+    } catch (error) {
+      setErrors({ general: error.message });
+    } finally {
       setIsLoading(false);
-      // Por ahora, redirigir directamente al dashboard
-      navigate('/admin/dashboard');
-    }, 1000);
+    }
   };
 
   return (
@@ -68,6 +79,12 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {errors.general && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                {errors.general}
+              </div>
+            )}
+            
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: '#7f5539' }}>
                 Email
@@ -139,7 +156,7 @@ const Login = () => {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: '#e6ccb2' }}>
             <p className="text-sm font-medium mb-2" style={{ color: '#7f5539' }}>Credenciales de prueba:</p>
-            <p className="text-sm" style={{ color: '#b08968' }}>Email: admin@alaburguer.com</p>
+            <p className="text-sm" style={{ color: '#b08968' }}>Email: admin@ala-burguer.com</p>
             <p className="text-sm" style={{ color: '#b08968' }}>Contraseña: admin123</p>
           </div>
         </div>
